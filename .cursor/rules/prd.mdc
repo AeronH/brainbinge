@@ -1,0 +1,185 @@
+---
+alwaysApply: true
+---
+.
+
+🧠 PRD – BrainBinge (AI Professor Learning Platform)
+“Learn anything through a fun, talking AI professor — choose your teacher, tone, and dive into interactive lessons.”
+🎯 1. Purpose
+
+BrainBinge makes learning interactive, personal, and entertaining.
+Users can upload or paste lesson material and learn through an AI professor that:
+
+Speaks in realistic, personality-driven voices (Snoop Dogg, Morgan Freeman, comedian, etc.),
+
+Explains the material conversationally through an audio-chat interface,
+
+Asks questions along the way to reinforce understanding, and
+
+Saves every session for replay later.
+
+Everything happens in one beautiful, dark-mode desktop interface:
+📚 Lesson overview (left) | 💬 Chat + audio playback (right) | 📁 Sidebar for saved sessions.
+
+🧩 2. Core Features
+Category	Feature	Description
+Lesson Input	Upload PDF / Paste Text / Paste Link	Add learning material (notes, Wikipedia, slides).
+	AI Lesson Parser	GPT extracts topics and builds an outline (overview, key points, examples).
+Main Learning Experience	Dual-Panel Layout	Left: Lesson overview. Right: live chat + audio narration.
+	AI Professor Chat	Conversational teaching flow, tone-aware personality.
+	Voice Personalities	Choose Snoop-style, Freeman-style, Comedian, or Classic Mentor.
+	Audio Narration	Real-time speech synthesis (ElevenLabs/PlayHT).
+	Inline Questions	AI asks you to respond mid-lesson (“Explain this in your words”).
+	Chat Display	Text bubbles sync perfectly with spoken voice.
+Session Management	Auto-Save Sessions	Auto-saves title, subject, date to sidebar.
+	Replay Mode	Reopen previous sessions with synced audio + transcript.
+Secondary Feature	Podcast Creator	Combine lessons into longer voice-acted podcasts.
+Customization	Humor filter (PG / PG-13 / R), playback speed, preferred voice pack, dark theme controls.	
+🧭 3. User Flow
+1️⃣ Dashboard
+
+Sidebar (left): Home, Saved Sessions, Podcasts, Settings.
+
+Center: “Create New Lesson” card.
+
+Right: Recent sessions list (latest on top).
+
+2️⃣ Upload Lesson
+
+Upload file or paste link/text.
+
+Pick:
+
+Subject name,
+
+Voice personality,
+
+Humor tone.
+
+Click Start Lesson.
+
+3️⃣ Learning Window
+
+Split 50/50 Layout:
+
+Left Panel:
+
+Lesson overview (headings, definitions, examples).
+
+Scrollable static content.
+
+Right Panel:
+
+Chat + voice output (AI professor speaking).
+
+Inline questions appear as message bubbles.
+
+You type answers → AI responds verbally and textually.
+
+4️⃣ Save & Review
+
+Session automatically saved to sidebar:
+Physics – Thermodynamics – 10/10/2025.
+
+Click any saved item → replay the chat and audio.
+
+5️⃣ Podcast Creation
+
+From dashboard → select multiple sessions → Generate Podcast.
+
+AI merges them into a continuous, voice-acted episode.
+
+🎨 4. Design System – Dark Mode
+✴️ Overall Look
+
+Sleek, cinematic dark-mode interface — easy on the eyes, high contrast, and immersive.
+A balance between Spotify (audio vibe) and Linear (modern SaaS polish).
+
+🌈 Color Palette
+Element	Color	Description
+Background	#0F1116	Deep navy-black, not pure black — less strain
+Cards / Panels	#1A1D24	Slightly lighter grey for contrast
+Primary Accent	Gradient #7C4DFF → #2F80ED	Electric violet-to-blue for modern contrast
+Secondary Accent	#56CCF2	Light blue used sparingly for highlights
+Text – Main	#EDEEF1	Soft white
+Text – Muted	#9EA1AA	Grey for timestamps, subtitles
+Dividers / Shadows	rgba(255, 255, 255, 0.05)	Subtle light dividers
+Correct Answer	#27AE60	Green accent
+Error / R-Mode	#EB5757	Red accent
+Button Hover Glow	rgba(124,77,255,0.4)	Faint purple aura on hover
+🧱 Shape & Style
+
+Rounded corners: 16–20px on all cards and containers.
+
+Chat bubbles: rounded with glowing border (accent gradient).
+
+Sidebar: darker tone (#14161C) with bright hover highlights.
+
+Buttons: fully rounded (pill-style) with glowing gradient fill.
+
+Avatars: circular, with faint ring glow matching chosen voice color.
+
+Scrollbars: thin, semi-transparent, auto-fade.
+
+🧠 Typography
+Type	Font	Style
+Primary	Inter / Satoshi	Smooth, geometric sans-serif
+Headers	22–28px, bold, white	
+Body	16–18px, medium, off-white	
+Muted	14px, grey
+
+🎧 UI Composition
+
+Sidebar left (260px).
+
+Lesson panel center (~40%).
+
+Chat/audio panel right (~60%).
+
+Consistent spacing, glowing gradients for CTAs, fluid animations (fade-in for messages).
+
+🧱 5. Supabase Database Schema
+users
+Column	Type	Description
+id	uuid (PK)	User ID
+email	text	Email
+name	text	Display name
+preferences	jsonb	Voice, tone, theme defaults
+created_at	timestamptz	Timestamp
+lessons
+Column	Type	Description
+id	uuid (PK)	Lesson ID
+user_id	uuid (FK → users.id)	Owner
+title	text	Lesson title
+subject	text	e.g., “Physics”
+source_type	text	pdf / link / text
+source_url	text	Original link (optional)
+outline	jsonb	Parsed structure (headings, points)
+summary	text	Short summary
+voice_style	text	Voice/personality used
+humor_level	text	PG / PG-13 / R
+created_at	timestamptz	Timestamp
+sessions
+Column	Type	Description
+id	uuid (PK)	Session ID
+lesson_id	uuid (FK → lessons.id)	Linked lesson
+title	text	Display title
+chat_log	jsonb	Full message exchange
+audio_urls	jsonb	TTS audio clip URLs
+score	numeric	Understanding score
+created_at	timestamptz	Timestamp
+podcasts
+Column	Type	Description
+id	uuid (PK)	Podcast ID
+user_id	uuid (FK → users.id)	Owner
+title	text	Podcast name
+lessons_included	jsonb	Array of lesson IDs
+audio_url	text	Generated podcast audio
+created_at	timestamptz	Timestamp
+⚙️ 6. Tech Stack
+Layer	Tech
+Frontend	Next.js 15 + TailwindCSS + shadcn/ui
+Backend	Supabase (Auth + DB + Storage + pgvector)
+AI	GPT-4o-mini (conversation + lesson parsing) + ElevenLabs / PlayHT (TTS)
+Hosting	Vercel
+Storage	Supabase for transcripts + audio files

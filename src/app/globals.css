@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* BrainBinge Modern Design System */
+    --background: 0 0% 5%; /* #0D0D0E - Deep black background */
+    --foreground: 0 0% 98%; /* #FAFAFA - Bright white */
+
+    --card: 0 0% 8%; /* #151516 - Grey cards */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 100%; /* White for main CTAs */
+    --primary-foreground: 0 0% 0%; /* Black text on white */
+
+    --secondary: 0 0% 20%; /* Grey for secondary CTAs */
+    --secondary-foreground: 0 0% 98%; /* White text on grey */
+
+    --muted: 0 0% 15%; /* Muted backgrounds */
+    --muted-foreground: 0 0% 60%; /* Grey text */
+
+    --accent: 217 91% 60%; /* Blue accent */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%; /* Red */
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 76% 36%; /* Green */
+    --success-foreground: 0 0% 98%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 12%;
+    --ring: 217 91% 60%;
+
+    --radius: 1.25rem; /* 20px base radius */
+
+    --sidebar-background: 0 0% 6%; /* Slightly lighter than main bg */
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Color Palette */
+    --color-blue: 217 91% 60%; /* #3B82F6 */
+    --color-yellow: 45 93% 58%; /* #FACC15 */
+    --color-red: 0 84% 60%; /* #EF4444 */
+    --color-pink: 330 81% 60%; /* #EC4899 */
+    --color-green: 142 76% 36%; /* #10B981 */
+    --color-purple: 271 81% 66%; /* #A855F7 */
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+@layer components {
+  /* BrainBinge Brand Colors */
+  .brand-logo-icon {
+    background: linear-gradient(to bottom right, #dc2626, #ef4444);
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+  }
+
+  .brand-logo-text {
+    background: linear-gradient(to right, #dc2626, #ef4444);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Chat Bubbles */
+  .chat-bubble-user {
+    background: linear-gradient(to bottom right, #2563eb, #9333ea);
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+  }
+
+  .chat-bubble-professor {
+    background: linear-gradient(to bottom right, #fef2f2, #fee2e2, #fecaca);
+    border: 2px solid rgba(220, 38, 38, 0.3);
+    box-shadow: 0 20px 25px -5px rgba(220, 38, 38, 0.2);
+    color: #1a1a1a;
+  }
+
+  .professor-avatar {
+    background: linear-gradient(to bottom right, #dc2626, #ef4444);
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.5);
+  }
+
+  .professor-label {
+    color: #dc2626;
+  }
+
+  /* Buttons */
+  .btn-ready {
+    background: linear-gradient(to right, #dc2626, #ef4444);
+    color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-ready:hover {
+    background: linear-gradient(to right, #b91c1c, #dc2626);
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.5);
+  }
+
+  .btn-continue {
+    background-color: #171717;
+    color: white;
+    border: 2px solid #991b1b;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-continue:hover {
+    background-color: #262626;
+    border-color: #dc2626;
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4);
+  }
+
+  .btn-start-over {
+    background: linear-gradient(to right, #059669, #10b981);
+    color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-start-over:hover {
+    background: linear-gradient(to right, #047857, #059669);
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.5);
+  }
+
+  .btn-question-answered {
+    background: linear-gradient(to right, #059669, #10b981) !important;
+    color: white !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .btn-question-answered:hover {
+    background: linear-gradient(to right, #047857, #059669) !important;
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.5) !important;
+    transform: translateY(-1px);
+  }
+
+  /* Quiz Options - Important to override button variant */
+  .quiz-option {
+    background: rgba(220, 38, 38, 0.1) !important;
+    border: 2px solid rgba(220, 38, 38, 0.3) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    color: white !important;
+  }
+
+  .quiz-option:hover {
+    background: linear-gradient(to right, rgba(220, 38, 38, 0.2), rgba(239, 68, 68, 0.2)) !important;
+    border: 2px solid rgba(220, 38, 38, 0.6) !important;
+    box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3) !important;
+    transform: translateY(-1px);
+  }
+
+  .quiz-option-a,
+  .quiz-option-b,
+  .quiz-option-c,
+  .quiz-option-d {
+    /* All options use same red styling now */
+  }
+
+  /* Mode Selection Cards */
+  .mode-card-learn,
+  .mode-card-walkthrough {
+    background: linear-gradient(to bottom right, rgba(37, 99, 235, 0.1), rgba(147, 51, 234, 0.1));
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mode-card-learn:hover,
+  .mode-card-walkthrough:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+  }
+
+  .mode-card-questions {
+    background: linear-gradient(to bottom right, rgba(5, 150, 105, 0.1), rgba(16, 185, 129, 0.1));
+    border: 2px solid rgba(16, 185, 129, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mode-card-questions:hover {
+    border-color: #10b981;
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+  }
+
+  .mode-icon-learn,
+  .mode-icon-walkthrough {
+    background: linear-gradient(to bottom right, #2563eb, #9333ea);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+  }
+
+  .mode-icon-questions {
+    background: linear-gradient(to bottom right, #059669, #10b981);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Lesson Mode Sidebar */
+  .lesson-mode-sidebar {
+    background: #14161C;
+    border-right: 1px solid hsl(var(--border));
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .lesson-mode-button {
+    position: relative;
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .lesson-mode-button:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Active state styles now handled inline per mode */
+
+  /* Resizable handle cursor states */
+  [data-resize-handle-active] {
+    cursor: grabbing !important;
+  }
+
+  [data-resize-handle-active] * {
+    cursor: grabbing !important;
+  }
+}
+
