@@ -80,8 +80,9 @@ export default function QuizMode({ lesson }: QuizModeProps) {
   const [showExitDialog, setShowExitDialog] = useState(false);
   
   // Quiz creation state
-  const [quizTitle, setQuizTitle] = useState("");
   const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<string[]>(["multiple_choice", "true_false"]);
+  const [sections, setSections] = useState<Array<{id: string, title: string, section_index: number}>>([]);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
@@ -99,6 +100,28 @@ export default function QuizMode({ lesson }: QuizModeProps) {
       checkQuizzes();
     }
   }, [lesson.id, isSubscribed]);
+
+  // Fetch sections for this lesson
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('lesson_sections')
+          .select('id, title, section_index')
+          .eq('lesson_id', lesson.id)
+          .order('section_index', { ascending: true });
+
+        if (error) throw error;
+        setSections(data || []);
+      } catch (error) {
+        console.error("Error fetching sections:", error);
+        // Fail silently - sections are optional
+      }
+    };
+
+    fetchSections();
+  }, [lesson.id]);
 
   // Poll quiz status if generating
   useEffect(() => {
@@ -194,11 +217,6 @@ export default function QuizMode({ lesson }: QuizModeProps) {
   };
 
   const handleGenerateQuiz = async () => {
-    if (!quizTitle.trim()) {
-      toast.error("Please enter a quiz title");
-      return;
-    }
-
     setState("generating");
     try {
       const response = await fetch("/api/lessons/quiz/generate", {
@@ -206,8 +224,8 @@ export default function QuizMode({ lesson }: QuizModeProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           lessonId: lesson.id,
-          title: quizTitle,
           questionTypes: selectedQuestionTypes,
+          sectionId: selectedSectionId,
         }),
       });
 
@@ -221,10 +239,10 @@ export default function QuizMode({ lesson }: QuizModeProps) {
       // Generation started - poll for completion
       if (data.generating) {
         toast.success("Quiz generation started!");
-        // Create quiz object for polling
+        // Create quiz object for polling (title will be set by API)
         const newQuiz: Quiz = {
           id: data.quizId,
-          title: quizTitle,
+          title: data.title || "Quiz",
           question_types: selectedQuestionTypes,
           status: 'generating',
           created_at: new Date().toISOString(),
@@ -437,14 +455,31 @@ export default function QuizMode({ lesson }: QuizModeProps) {
           
           <div className="space-y-4">
             <div>
-              <Label htmlFor="quiz-title">Quiz Title</Label>
-              <Input
-                id="quiz-title"
-                value={quizTitle}
-                onChange={(e) => setQuizTitle(e.target.value)}
-                placeholder="e.g., Chapter 1 Review"
-                className="mt-2"
-              />
+              <Label className="mb-3 block">Quiz Scope</Label>
+              <RadioGroup 
+                value={selectedSectionId || "entire"} 
+                onValueChange={(value) => setSelectedSectionId(value === "entire" ? null : value)}
+              >
+                <div className="space-y-2">
+                  <div
+                    className="flex items-center space-x-2 p-3 rounded-lg border cursor-pointer hover:border-[#F59E0B] transition-all"
+                  >
+                    <RadioGroupItem value="entire" id="scope-entire" />
+                    <Label htmlFor="scope-entire" className="cursor-pointer flex-1">Entire Lesson</Label>
+                  </div>
+                  {sections.map((section) => (
+                    <div
+                      key={section.id}
+                      className="flex items-center space-x-2 p-3 rounded-lg border cursor-pointer hover:border-[#F59E0B] transition-all"
+                    >
+                      <RadioGroupItem value={section.id} id={`scope-${section.id}`} />
+                      <Label htmlFor={`scope-${section.id}`} className="cursor-pointer flex-1">
+                        Section {section.section_index + 1}: {section.title}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
             </div>
 
             <div>
@@ -475,8 +510,8 @@ export default function QuizMode({ lesson }: QuizModeProps) {
               <Button
                 onClick={() => {
                   setState("selecting");
-                  setQuizTitle("");
                   setSelectedQuestionTypes(["multiple_choice", "true_false"]);
+                  setSelectedSectionId(null);
                 }}
                 variant="outline"
                 className="flex-1"
@@ -485,7 +520,7 @@ export default function QuizMode({ lesson }: QuizModeProps) {
               </Button>
               <Button
                 onClick={handleGenerateQuiz}
-                disabled={selectedQuestionTypes.length === 0 || !quizTitle.trim()}
+                disabled={selectedQuestionTypes.length === 0}
                 className="flex-1 bg-gradient-to-r from-[#F59E0B] to-[#F97316] hover:opacity-90 text-white disabled:opacity-50"
               >
                 <Sparkles className="mr-2 h-4 w-4" />

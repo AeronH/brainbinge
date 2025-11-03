@@ -129,28 +129,28 @@ export function SignUpModal({ open, onOpenChange, initialMode = "signup" }: Sign
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-8">
+      <DialogContent className="sm:max-w-md bg-card border-border rounded-2xl p-6 max-h-[85vh] overflow-y-auto">
         <DialogTitle className="sr-only">
           {isSignIn ? "Sign in to BrainBinge" : "Sign up for BrainBinge"}
         </DialogTitle>
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-blue flex items-center justify-center">
-            <BookOpen className="w-7 h-7 text-white" />
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-blue flex items-center justify-center">
+            <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <span className="text-3xl font-bold text-foreground">BrainBinge</span>
+          <span className="text-2xl font-bold text-foreground">BrainBinge</span>
         </div>
 
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+        <div className="text-center mb-5">
+          <h2 className="text-xl font-bold text-foreground mb-1">
             {isSignIn ? "Welcome back" : "Get started free"}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {isSignIn ? "Sign in to continue" : "Create your account to start learning"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {!isSignIn && (
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
@@ -201,13 +201,13 @@ export function SignUpModal({ open, onOpenChange, initialMode = "signup" }: Sign
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 text-base font-semibold shadow-lg"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-4 text-base font-semibold shadow-lg"
           >
             {loading ? (isSignIn ? "Signing in..." : "Creating account...") : (isSignIn ? "Sign In" : "Create Account")}
           </Button>
         </form>
 
-        <div className="relative my-6">
+        <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border" />
           </div>
@@ -218,7 +218,7 @@ export function SignUpModal({ open, onOpenChange, initialMode = "signup" }: Sign
 
         <Button
           variant="outline"
-          className="w-full rounded-xl py-5 text-base"
+          className="w-full rounded-xl py-4 text-base"
           onClick={handleGoogleAuth}
           disabled={loading}
         >
@@ -243,7 +243,7 @@ export function SignUpModal({ open, onOpenChange, initialMode = "signup" }: Sign
           Continue with Google
         </Button>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-4">
           <button
             type="button"
             onClick={() => setIsSignIn(!isSignIn)}

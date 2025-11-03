@@ -82,27 +82,27 @@ export function SubscriptionModal({ open, onOpenChange, feature = "this feature"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl bg-card border-border rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl bg-card border-border rounded-2xl p-6 max-h-[75vh] overflow-y-auto">
         <DialogTitle className="sr-only">
           Subscribe to unlock {feature}
         </DialogTitle>
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue to-pink mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue to-pink mb-3">
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
-          <h2 className="text-4xl font-bold text-foreground mb-3">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
             Unlock {feature}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Get unlimited access to AI-powered learning with personalized professors and interactive lessons
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {plans.map((plan) => (
             <Card
               key={plan.name}
-              className={`relative p-8 bg-card border-2 rounded-2xl transition-all ${
+              className={`relative p-6 bg-card border-2 rounded-2xl transition-all ${
                 plan.popular
                   ? "border-blue shadow-lg shadow-blue/20"
                   : "border-border hover:border-blue/50"
@@ -117,21 +117,21 @@ export function SubscriptionModal({ open, onOpenChange, feature = "this feature"
                 </div>
               )}
 
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-bold text-foreground">{plan.price}</span>
+                  <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                   <span className="text-muted-foreground">/{plan.period}</span>
                 </div>
                 {plan.savings && (
-                  <p className="text-green text-sm font-medium mt-2">{plan.savings}</p>
+                  <p className="text-green text-sm font-medium mt-1">{plan.savings}</p>
                 )}
               </div>
 
               <Button
                 onClick={() => handleSubscribe(plan.priceId, plan.planType)}
                 disabled={loading !== null}
-                className={`w-full rounded-xl py-6 text-base font-semibold mb-6 ${
+                className={`w-full rounded-xl py-5 text-base font-semibold mb-4 ${
                   plan.popular
                     ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                     : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"

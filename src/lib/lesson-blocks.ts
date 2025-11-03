@@ -39,5 +39,59 @@ export function createBlock(
   return block;
 }
 
+/**
+ * Extract plain text content from blocks array for quiz generation
+ */
+export function extractContentFromBlocks(blocks: LessonBlock[]): string {
+  const parts: string[] = [];
+
+  blocks.forEach((block) => {
+    // Strip markdown formatting (**text** -> text)
+    const cleanContent = block.content.replace(/\*\*(.+?)\*\*/g, '$1');
+
+    switch (block.type) {
+      case 'heading1':
+      case 'heading2':
+      case 'heading3':
+        parts.push(cleanContent);
+        parts.push('\n\n');
+        break;
+
+      case 'paragraph':
+        parts.push(cleanContent);
+        parts.push('\n\n');
+        break;
+
+      case 'bullet':
+        parts.push('- ');
+        parts.push(cleanContent);
+        parts.push('\n');
+        break;
+
+      case 'numbered':
+        // Number will be determined by order, just add content
+        parts.push(cleanContent);
+        parts.push('\n');
+        break;
+
+      case 'callout':
+        parts.push(cleanContent);
+        parts.push('\n\n');
+        break;
+
+      case 'divider':
+        parts.push('\n---\n\n');
+        break;
+
+      default:
+        // For any unknown types, just add the content
+        parts.push(cleanContent);
+        parts.push('\n');
+    }
+  });
+
+  return parts.join('').trim();
+}
+
 
 

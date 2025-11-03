@@ -43,13 +43,14 @@ export const generateQuiz = inngest.createFunction(
   },
   { event: 'quiz/generate' },
   async ({ event, step }) => {
-    const { quizId, lessonId, questionTypes } = event.data;
+    const { quizId, lessonId, questionTypes, sectionContent, sectionWordCount } = event.data;
 
     if (!quizId || !lessonId || !questionTypes || !Array.isArray(questionTypes) || questionTypes.length === 0) {
       throw new Error('quizId, lessonId, and questionTypes array required');
     }
 
-    console.log(`[Inngest] Starting quiz generation for quiz: ${quizId}, lesson: ${lessonId}, types: ${questionTypes.join(', ')}`);
+    const isSectionBased = !!sectionContent;
+    console.log(`[Inngest] Starting quiz generation for quiz: ${quizId}, lesson: ${lessonId}, types: ${questionTypes.join(', ')}, ${isSectionBased ? 'section-based' : 'full lesson'}`);
 
     // Get environment variables at runtime
     const OPENAI_API_KEY = getEnvVar('OPENAI_API_KEY');
@@ -91,14 +92,21 @@ export const generateQuiz = inngest.createFunction(
         };
       });
 
-      const content = lesson.original_content;
-      const wordCount = lesson.word_count || 1000;
+      // Use section content if provided, otherwise use full lesson content
+      const content = sectionContent || lesson.original_content;
+      const wordCount = sectionWordCount || lesson.word_count || 1000;
 
       if (!content) {
         await step.run('mark-error', async () => {
           await supabase.from('quizzes').update({ status: 'error' }).eq('id', quizId);
         });
         throw new Error('No content');
+      }
+
+      if (isSectionBased) {
+        console.log(`[Inngest] Generating quiz from section: ${wordCount} words`);
+      } else {
+        console.log(`[Inngest] Generating quiz from entire lesson: ${wordCount} words`);
       }
 
       // Calculate total question count: 1 per 150 words, minimum 20, maximum 100

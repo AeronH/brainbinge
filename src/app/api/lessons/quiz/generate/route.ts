@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { checkSubscription } from "@/lib/subscription";
 import { inngest } from "@/lib/inngest/client";
+import { extractContentFromBlocks, type LessonBlock } from "@/lib/lesson-blocks";
 
 export async function POST(request: NextRequest) {
   try {
-    const { lessonId, title, questionTypes } = await request.json();
+    const { lessonId, questionTypes, sectionId } = await request.json();
 
     if (!lessonId) {
       return NextResponse.json(
@@ -73,8 +74,91 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle section-based quiz generation
+    let sectionContent: string | undefined;
+    let sectionWordCount: number | undefined;
+    let section: { id: string; title: string } | null = null;
+
+    if (sectionId) {
+      // Verify section belongs to lesson
+      const { data: sectionData, error: sectionError } = await supabase
+        .from('lesson_sections')
+        .select('id, title')
+        .eq('id', sectionId)
+        .eq('lesson_id', lessonId)
+        .single();
+
+      if (sectionError || !sectionData) {
+        return NextResponse.json(
+          { error: "Section not found or does not belong to this lesson" },
+          { status: 404 }
+        );
+      }
+
+      section = sectionData;
+
+      // Fetch all blocks for this section
+      const { data: blocks, error: blocksError } = await supabase
+        .from('lesson_blocks')
+        .select('type, content, order_index, callout_type')
+        .eq('section_id', sectionId)
+        .order('order_index', { ascending: true });
+
+      if (blocksError) {
+        console.error("Error fetching section blocks:", blocksError);
+        return NextResponse.json(
+          { error: "Failed to fetch section content" },
+          { status: 500 }
+        );
+      }
+
+      if (!blocks || blocks.length === 0) {
+        return NextResponse.json(
+          { error: "Section has no content" },
+          { status: 400 }
+        );
+      }
+
+      // Convert to LessonBlock format and extract content
+      const lessonBlocks: LessonBlock[] = blocks.map(block => ({
+        type: block.type as LessonBlock['type'],
+        content: block.content,
+        order: block.order_index,
+        calloutType: block.callout_type as any
+      }));
+
+      sectionContent = extractContentFromBlocks(lessonBlocks);
+      
+      // Calculate word count (simple word count by splitting on whitespace)
+      sectionWordCount = sectionContent.split(/\s+/).filter(word => word.length > 0).length;
+
+      console.log(`[API] Generating quiz from section "${section.title}": ${sectionWordCount} words`);
+    }
+
+    // Generate automatic quiz title
+    const baseTitle = sectionId && section ? section.title : lesson.title;
+    const titlePrefix = baseTitle;
+    
+    // Find existing quizzes with the same pattern to determine next number
+    const { data: existingQuizzes } = await supabase
+      .from('quizzes')
+      .select('title')
+      .eq('lesson_id', lessonId);
+    
+    // Extract numbers from existing quiz titles matching the pattern
+    const pattern = new RegExp(`^${titlePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} Quiz (\\d+)$`);
+    const quizNumbers = existingQuizzes
+      ?.map(q => {
+        const match = q.title.match(pattern);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((n): n is number => n !== null)
+      .sort((a, b) => b - a) || [];
+    
+    const nextNumber = quizNumbers.length > 0 ? quizNumbers[0] + 1 : 1;
+    const quizTitle = `${titlePrefix} Quiz ${nextNumber}`;
+
     // Create quiz record
-    const quizTitle = title || `Quiz ${new Date().toLocaleDateString()}`;
     const { data: quiz, error: quizError } = await supabase
       .from("quizzes")
       .insert({
@@ -107,6 +191,8 @@ export async function POST(request: NextRequest) {
         quizId: quiz.id,
         lessonId,
         questionTypes,
+        sectionContent,
+        sectionWordCount,
       },
     });
     
@@ -116,6 +202,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       quizId: quiz.id,
+      title: quizTitle,
       generating: true,
       status: 'generating',
     });
