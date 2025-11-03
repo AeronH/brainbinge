@@ -855,9 +855,10 @@ Return JSON:
     });
 
     // Step 4: Generate sections with subsections in parallel batches
-    const allBlocks = await step.run('generate-sections', async () => {
+    const { allBlocks, sections } = await step.run('generate-sections', async () => {
       console.log('[Inngest] Phase 2: Generating sections with subsections...');
       const blocks: any[] = [];
+      const sections: Array<{ title: string; sectionIndex: number; headingOrder: number }> = [];
       let totalWordsGenerated = 0;
       const wordsPerSection = Math.floor(targetWords.min / plan.sections.length);
 
@@ -893,11 +894,15 @@ Return JSON:
           // Add major section heading (heading2)
           // Use large gaps for ordering: section index * 1000
           const sectionBaseOrder = sectionIndex * 1000;
+          const sectionTitle = section.sectionTitle;
+          const headingContent = `${sectionEmojis[sectionIndex % sectionEmojis.length]} ${sectionTitle}`;
+          
           sectionBlocks.push({
             type: 'heading2',
-            content: `${sectionEmojis[sectionIndex % sectionEmojis.length]} ${section.sectionTitle}`,
+            content: headingContent,
             order: sectionBaseOrder,
-            calloutType: null
+            calloutType: null,
+            sectionIndex: sectionIndex // Track which section this block belongs to
           });
 
           // Process each subsection
@@ -907,11 +912,19 @@ Return JSON:
             
             // Convert subsection content to blocks
             const subsectionBlocks = formatToBlocks(subsection.formatId, subsection.content, subsectionBaseOrder);
+            // Tag all subsection blocks with section index
+            subsectionBlocks.forEach((block: any) => {
+              block.sectionIndex = sectionIndex;
+            });
             sectionBlocks.push(...subsectionBlocks);
           }
 
           const sectionWordCount = countWordsInBlocks(sectionBlocks);
           console.log(`[Inngest] Section ${sectionIndex + 1} ✓ (${sectionBlocks.length} blocks, ${sectionWordCount} words)`);
+          
+          // Store section metadata (title without emoji for cleaner storage)
+          const cleanTitle = sectionTitle.replace(/^[^\w\s]+ /, ''); // Remove leading emoji if present
+          sections.push({ title: cleanTitle, sectionIndex, headingOrder: sectionBaseOrder });
           
           return { sectionIndex, blocks: sectionBlocks, wordCount: sectionWordCount };
         });
@@ -930,7 +943,7 @@ Return JSON:
           // Add divider between major sections (except after last section)
           if (result.sectionIndex < plan.sections.length - 1) {
             const dividerOrder = (result.sectionIndex + 1) * 1000 - 1;
-            blocks.push({ type: 'divider', content: '', order: dividerOrder, calloutType: null });
+            blocks.push({ type: 'divider', content: '', order: dividerOrder, calloutType: null, sectionIndex: null });
           }
         }
         
@@ -945,8 +958,11 @@ Return JSON:
         block.order = index;
       });
 
+      // Sort sections by sectionIndex
+      sections.sort((a, b) => a.sectionIndex - b.sectionIndex);
+
       console.log(`[Inngest] All sections complete! ${blocks.length} blocks, ${totalWordsGenerated} words`);
-      return blocks;
+      return { allBlocks: blocks, sections };
     });
 
     // Step 5: Generate practice
@@ -997,7 +1013,7 @@ ${content.substring(0, 2000)}`
       };
     });
 
-    // Step 6: Save blocks and practice to database
+    // Step 6: Save sections, blocks and practice to database
     await step.run('save-blocks-and-practice', async () => {
       const wordCount = countWordsInBlocks(allBlocks);
       const retentionRatio = (wordCount / inputWordCount * 100).toFixed(1);
@@ -1006,14 +1022,55 @@ ${content.substring(0, 2000)}`
       console.log(`[Inngest] Retention: ${retentionRatio}% (target: 85-95%)`);
       console.log('[Inngest] Saving to database...');
 
-      // Save blocks to lesson_blocks table
-      const blocksToInsert = allBlocks.map(block => ({
-        lesson_id: lessonId,
-        type: block.type,
-        content: block.content,
-        order_index: block.order,
-        callout_type: block.calloutType || null
-      }));
+      // First, save sections to lesson_sections table
+      const sectionsToInsert = sections.map(section => {
+        // Find the heading2 block for this section to get its final order_index
+        const headingBlock = allBlocks.find((b: any) => 
+          b.type === 'heading2' && 
+          b.sectionIndex === section.sectionIndex
+        );
+        return {
+          lesson_id: lessonId,
+          title: section.title,
+          section_index: section.sectionIndex,
+          order_index: headingBlock ? headingBlock.order : section.sectionIndex * 1000
+        };
+      });
+
+      const { data: insertedSections, error: sectionsError } = await supabase
+        .from('lesson_sections')
+        .insert(sectionsToInsert)
+        .select('id, section_index');
+
+      if (sectionsError) {
+        console.error('[Inngest] Sections error:', sectionsError);
+        throw new Error(`Failed to save sections: ${sectionsError.message}`);
+      }
+      console.log(`[Inngest] Saved ${insertedSections.length} sections`);
+
+      // Create a map from section_index to section_id
+      const sectionIdMap = new Map<number, string>();
+      if (insertedSections) {
+        insertedSections.forEach((s: any) => {
+          sectionIdMap.set(s.section_index, s.id);
+        });
+      }
+
+      // Save blocks to lesson_blocks table with section_id
+      const blocksToInsert = allBlocks.map((block: any) => {
+        const sectionId = block.sectionIndex !== null && block.sectionIndex !== undefined
+          ? sectionIdMap.get(block.sectionIndex) || null
+          : null;
+        
+        return {
+          lesson_id: lessonId,
+          type: block.type,
+          content: block.content,
+          order_index: block.order,
+          callout_type: block.calloutType || null,
+          section_id: sectionId
+        };
+      });
 
       const { error: blocksError } = await supabase.from('lesson_blocks').insert(blocksToInsert);
       if (blocksError) {
